@@ -6,13 +6,16 @@ import Blog from './pages/Blog';
 import Ai from './pages/Ai';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import TeacherDashboard from './pages/TeacherDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
-import Admission from './pages/admission';
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+
+
+import Admission from './pages/Admission';
 import Payment from './pages/Payment';
+import Admin from './pages/Admin';
 
 function App() {
   return (
+    
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -22,17 +25,11 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/admission" element={<Admission/>}/>
         <Route path="/payment" element={<Payment/>}/>
+        <Route
+          path="/admin" element={<Admin/>} />
 
         
-        {/* Protected Route for Teacher Dashboard */}
-        <Route
-          path="/teacher-dashboard"
-          element={
-            <ProtectedRoute>
-              <TeacherDashboard />
-            </ProtectedRoute>
-          }
-        />
+        
         
         {/* Add more routes as needed */}
       </Routes>

@@ -1,201 +1,210 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import NavigationBar from './NavigationBar';
+import React, { useState, useEffect } from 'react';
 import Footer from './Footer';
+import NavigationBar from './NavigationBar';
 
-const Admission = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    gender: '',
-    course: '',
+const AdmissionsPage = () => {
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [newCourse, setNewCourse] = useState({
+    title: '',
+    description: '',
+    teacher: '',
+    fees: ''
   });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  // Fetch courses from the backend when the component mounts
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/courses'); // Ensure this API endpoint is correctly set up in your backend
+        if (!response.ok) {
+          throw new Error('Failed to fetch courses');
+        }
+        const data = await response.json();
+        setCourses(data); // Set the fetched courses into state
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    };
+    
+    fetchCourses(); // Call the fetch function when the component mounts
+  }, []);
+
+  // Handle course selection to display the course modal
+  const handleCourseClick = (course) => {
+    setSelectedCourse(course);
   };
 
-  const handleSubmit = (e) => {
+  // Close the course modal
+  const handleClose = () => {
+    setSelectedCourse(null);
+  };
+
+  // Handle input changes for the registration form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewCourse({ ...newCourse, [name]: value });
+  };
+
+  // Submit the new course form data to the backend
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted: ', formData);
+    try {
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCourse),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to submit course');
+      }
+      setNewCourse({ title: '', description: '', teacher: '', fees: '' }); // Clear the form
+
+      // Refresh the course list after submission
+      const updatedCourses = await fetch('/api/courses');
+      const data = await updatedCourses.json();
+      setCourses(data);
+    } catch (error) {
+      console.error('Error submitting course:', error);
+    }
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen">
-      {/* Navigation Bar */}
+    <div>
       <NavigationBar />
-  
-      {/* Outer Container with Background Color */}
-      <div className="flex justify-center items-center min-h-screen">
-        {/* Admission Form Container */}
-        <div className="max-w-md w-full bg-white p-6 shadow-md rounded-lg bg-white-200 rounded-md bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 border border-gray-100">
-          <h2 className="text-2xl text-white font-semibold mb-4">Admission Form</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Field */}
-            <div>
-              <label htmlFor="name" className="block text-white text-sm font-medium">
-                Name*
-              </label>
+      <div className="min-h-screen bg-gradient-to-r from-black via-purple-900 to-blue-900 text-white flex flex-col items-center justify-center px-6 py-12">
+        
+        {/* Introduction */}
+        <section className="mb-16 text-center">
+          <h1 className="text-5xl font-extrabold mb-4 neon-glow text-purple-400">Welcome to Talent Engaged Academy</h1>
+          <p className="text-xl text-gray-300 leading-relaxed max-w-3xl">
+            Step into the future where the stars are your classroom, and the universe is your playground.
+            At Talent Engaged Academy, we offer cutting-edge courses and a transformative learning experience.
+          </p>
+        </section>
+
+        {/* Courses Offered */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold mb-8 neon-glow text-blue-400">Courses Offered</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+            {courses.map((course, index) => (
+              <div
+                key={index}
+                className="bg-gray-800 p-6 rounded-lg shadow-lg hover:scale-105 transition-transform duration-300 neon-border cursor-pointer"
+                onClick={() => handleCourseClick(course)}
+              >
+                <h3 className="text-xl font-semibold mb-2 text-purple-300">{course.title}</h3>
+                <p>{course.description}</p>
+                <p className="mt-2 text-green-300">Instructor: {course.teacher}</p>
+                <p className="mt-2 text-yellow-300">Fees: ${course.fees}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Course Detail Modal */}
+        {selectedCourse && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50">
+            <div className="bg-gray-900 p-8 rounded-lg shadow-lg transition-transform transform scale-105">
+              <button className="absolute top-2 right-2 text-white" onClick={handleClose}>X</button>
+              <h3 className="text-2xl font-semibold mb-2 text-purple-300">{selectedCourse.title}</h3>
+              <p className="text-gray-300">{selectedCourse.description}</p>
+              <p className="mt-4 text-green-300">Instructor: {selectedCourse.teacher}</p>
+              <p className="mt-2 text-yellow-300">Fees: ${selectedCourse.fees}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Admission Process */}
+        <section className="mb-16 text-center">
+          <h2 className="text-3xl font-bold mb-8 neon-glow text-green-400">Admission Process</h2>
+          <ol className="list-decimal list-inside text-left max-w-2xl mx-auto">
+            <li className="mb-4">
+              <span className="font-bold text-blue-300">Step 1: Online Application</span> - Fill out the application and submit your credentials.
+            </li>
+            <li className="mb-4">
+              <span className="font-bold text-blue-300">Step 2: Entrance Exam</span> - Take the interstellar exam testing your physics and logic skills.
+            </li>
+            <li className="mb-4">
+              <span className="font-bold text-blue-300">Step 3: Interview</span> - Meet our galactic leaders and demonstrate your passion for learning.
+            </li>
+            <li className="mb-4">
+              <span className="font-bold text-blue-300">Step 4: Orientation</span> - Receive your starship pass and prepare for your cosmic journey.
+            </li>
+          </ol>
+        </section>
+
+        {/* Registration Form */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold mb-8 neon-glow text-pink-400">Registration Form</h2>
+          <form className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-3xl mx-auto neon-border" onSubmit={handleSubmit}>
+            <div className="mb-6">
+              <label className="block mb-2 text-gray-300">Course Title:</label>
               <input
                 type="text"
-                name="name"
-                id="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter your name"
+                name="title"
+                value={newCourse.title}
+                onChange={handleInputChange}
+                className="w-full p-4 rounded-md bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 neon-border"
+                placeholder="Enter course title"
                 required
               />
             </div>
-
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-white text-sm font-medium">
-                Email*
-              </label>
+            <div className="mb-6">
+              <label className="block mb-2 text-gray-300">Course Description:</label>
+              <textarea
+                name="description"
+                value={newCourse.description}
+                onChange={handleInputChange}
+                className="w-full p-4 rounded-md bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 neon-border"
+                rows="3"
+                placeholder="Enter course description"
+                required
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block mb-2 text-gray-300">Instructor:</label>
               <input
-                type="email"
-                name="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter your email"
+                type="text"
+                name="teacher"
+                value={newCourse.teacher}
+                onChange={handleInputChange}
+                className="w-full p-4 rounded-md bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 neon-border"
+                placeholder="Enter instructor name"
                 required
               />
             </div>
-
-            {/* Phone Number Field */}
-            <div>
-              <label htmlFor="phone" className="block text-white text-sm font-medium">
-                Phone Number*
-              </label>
+            <div className="mb-6">
+              <label className="block mb-2 text-gray-300">Fees:</label>
               <input
-                type="tel"
-                name="phone"
-                id="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter your phone number"
+                type="number"
+                name="fees"
+                value={newCourse.fees}
+                onChange={handleInputChange}
+                className="w-full p-4 rounded-md bg-gray-700 text-white focus:ring-2 focus:ring-blue-500 neon-border"
+                placeholder="Enter course fees"
                 required
               />
             </div>
-
-            {/* Birth Date Field */}
-            <div>
-              <label htmlFor="birthDate" className="block text-white text-sm font-medium ">
-                Birth Date*
-              </label>
-              <input
-                type="date"
-                name="birthDate"
-                id="birthDate"
-                value={formData.birthDate}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              />
-            </div>
-
-            {/* Gender Radio Buttons */}
-            <div>
-              <label className="block text-white text-sm font-medium ">Gender*</label>
-              <div className="mt-2 space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="male"
-                    checked={formData.gender === 'male'}
-                    onChange={handleChange}
-                    className="text-indigo-600 focus:ring-indigo-500"
-                    required
-                  />
-                  <span className="ml-2 text-white">Male</span>
-                </label>
-
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="female"
-                    checked={formData.gender === 'female'}
-                    onChange={handleChange}
-                    className="text-indigo-600 focus:ring-indigo-500"
-                    required
-                  />
-                  <span className="ml-2 text-white">Female</span>
-                </label>
-
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="other"
-                    checked={formData.gender === 'other'}
-                    onChange={handleChange}
-                    className="text-indigo-600 focus:ring-indigo-500"
-                    required
-                  />
-                  <span className="ml-2 text-white">Other</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Course Selection */}
-            <div>
-              <label htmlFor="course" className="block text-sm font-medium text-white">
-                Select Course*
-              </label>
-              <select
-                
-                name="course"
-                id="course"
-                value={formData.course}
-                onChange={handleChange}
-                className="mt-1 mb-4 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                required
-              >
-                <option value="">Choose a course</option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Business Administration">Business Administration</option>
-                <option value="Mechanical Engineering">Mechanical Engineering</option>
-              </select>
-            </div>
-
-            {/* payment Button */}
-            <Link to="/payment">
-            <div>
-              <button
-                type="payment"
-                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Pay Admission Fee
-              </button>
-            </div>            
-            </Link>
-            {/* Submit Button */}
-            <div>
-              <button
-                type="submit"
-                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Submit
-              </button>
-            </div>
+            <button className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-md neon-glow hover:scale-105 transition-transform duration-300">
+              Submit Course
+            </button>
           </form>
-        </div>
+        </section>
+
+        {/* Additional Links */}
+        <section className="text-center">
+          <h2 className="text-3xl font-bold mb-8 neon-glow text-orange-400">Need Assistance?</h2>
+          <p className="text-gray-300 mb-4">For further inquiries, contact our admissions team via the link below:</p>
+          <a href="/contact" className="bg-gradient-to-r from-purple-500 to-red-500 py-3 px-6 text-white rounded-md shadow-lg hover:scale-105 transition-transform duration-300">Contact Us</a>
+        </section>
+
       </div>
-      {/* footer */}
-      <Footer/>
+      <Footer />
     </div>
   );
 };
 
-export default Admission;
+export default AdmissionsPage;
